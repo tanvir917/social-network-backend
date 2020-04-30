@@ -3,10 +3,11 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const multer = require('multer')
+const multer = require('multer');
+const graphqlHttp = require('express-graphql');
 
-const feedRoutes = require('./routes/feed');
-const authRoutes = require('./routes/auth');
+const graphqlSchema = require('./graphql/schema');
+const graphqlResolver = require('./graphql/resolvers');
 
 const app = express();
 
@@ -48,8 +49,11 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/feed', feedRoutes);
-app.use('/auth', authRoutes);
+app.use('/graphql', graphqlHttp({
+  schema: graphqlSchema,
+  rootValue: graphqlResolver,
+  graphiql: true
+}));
 
 app.use((error, req, res, next) => {
     console.log(error);
@@ -61,11 +65,7 @@ app.use((error, req, res, next) => {
 
 mongoose.connect('mongodb+srv://tanvir:00000000@cluster0-w7tp8.mongodb.net/messages?retryWrites=true&w=majority')
 .then(result => {
-    const server = app.listen(8080);
-    const io = require('./socket').init(server);
-    io.on('connection', socket => {
-      console.log('Client connected');
-    })
+    app.listen(8080);
 })
 .catch(err => console.log(err));
 

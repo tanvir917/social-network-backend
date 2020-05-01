@@ -59,6 +59,11 @@ module.exports = {
         return {token: token, userId: user._id.toString() };
     },
     createPost: async function({ postInput }, req) {
+        if(!req.isAuth) {
+            const error = new Error('Not Authenticated.');
+            error.code = 401;
+            throw error;
+        }
         const errors = [];
         if (validator.isEmpty(postInput.title) || !validator.isLength(postInput.title, { min: 5 })) {
             errors.push({ message: 'Title is invalid.' });
@@ -72,19 +77,27 @@ module.exports = {
             error.code = 422;
             throw error;
         }
+        const user = await User.findById(req.userId);
+        if(!user) {
+            const error = new Error('Invalid user.');
+            error.code = 401;
+            throw error;
+        }
         //now input is valid
         const post = new Post({
             title: postInput.title,
             content: postInput.content,
-            imageUrl: postInput.imageUrl
+            imageUrl: postInput.imageUrl,
+            creator: user
         });
-        const createPost = await post.save();
-        //add post to users posts
+        const createdPost = await post.save();
+        user.posts.push(createdPost);
+        await user.save();
         return { 
-            ...createPost._doc, 
-            _id: createPost._id.toString(), 
-            createAt: createPost.createdAt.toISOString(),
-            updatedAt: createPost.updatedAt.toISOString()
+            ...createdPost._doc, 
+            _id: createdPost._id.toString(), 
+            createdAt: createdPost.createdAt.toISOString(),
+            updatedAt: createdPost.updatedAt.toISOString()
         }; 
 
     }

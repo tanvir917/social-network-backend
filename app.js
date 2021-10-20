@@ -94,8 +94,8 @@ app.use((error, req, res, next) => {
     res.status(status).json({ message: message, data: data })
 })
 
-mongoose.connect('mongodb+srv://tanvir:00000000@cluster0-w7tp8.mongodb.net/messages?retryWrites=true&w=majority')
+mongoose.connect('mongodb+srv://tanvir:00000000@cluster0-w7tp8.mongodb.net/messages?retryWrites=true')
 .then(result => {
     app.listen(8080);
 })
-.catch(err => console.log(err));
+.catch(err => console.log(err)); 
